@@ -12,6 +12,10 @@
 		"build": "tsc",
 		"lint": "biome check"
 	},
+	"files": [
+		"dist",
+		"!dist/.tsbuildinfo"
+	],
 	"peerDependencies": {
 		"@discordeno/bot": "^21.0.0"
 	},
