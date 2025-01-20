@@ -8,11 +8,16 @@ import type {
 import type { Command, CommandOption } from "./command.js";
 
 export function useCommands<
-	TProps extends TransformersDesiredProperties,
-	TBehavior extends DesiredPropertiesBehavior,
-	TBot extends Bot<TProps, TBehavior>,
->(rawBot: Bot<TProps, TBehavior> & TBot): BotWithCommands<TProps, TBehavior, TBot> {
-	const bot = rawBot as BotWithCommands<TProps, TBehavior, TBot>;
+	TCommandContext extends object,
+	TProps extends TransformersDesiredProperties = TransformersDesiredProperties,
+	TBehavior extends DesiredPropertiesBehavior = DesiredPropertiesBehavior.RemoveKey,
+	TBot extends Bot<TProps, TBehavior> = Bot<TProps, TBehavior>,
+>(
+	rawBot: Bot<TProps, TBehavior> & TBot,
+	// For now, we don't need any options, this is for inferring the context type
+	_options: { context: TCommandContext },
+): BotWithCommands<TProps, TBehavior, TBot, TCommandContext> {
+	const bot = rawBot as BotWithCommands<TProps, TBehavior, TBot, TCommandContext>;
 
 	bot.commands = {
 		mapping: new Map(),
@@ -32,10 +37,18 @@ export function useCommands<
 	return bot;
 }
 
+/**
+ * Specify the type of the context to be used in commands
+ */
+export function useContext<T>(): T {
+	return undefined as unknown as T;
+}
+
 export type BotWithCommands<
 	TProps extends TransformersDesiredProperties,
 	TBehavior extends DesiredPropertiesBehavior,
 	TBot extends Bot<TProps, TBehavior>,
+	TCommandContext extends object,
 > = TBot & {
 	/**
 	 * dd-commands functions & data
@@ -44,13 +57,13 @@ export type BotWithCommands<
 		/**
 		 * The mapping of command names to their respective command objects
 		 */
-		mapping: Map<string, Command<TProps, TBehavior, TBot>>;
+		mapping: Map<string, Command<TProps, TBehavior, TBot, CommandOption[], TCommandContext>>;
 		/**
 		 * Create a new command
 		 */
 		create: <const TOptions extends CommandOption[]>(
-			command: Command<TProps, TBehavior, TBot, TOptions>,
-		) => Command<TProps, TBehavior, TBot, TOptions>;
+			command: Command<TProps, TBehavior, TBot, TOptions, TCommandContext>,
+		) => Command<TProps, TBehavior, TBot, TOptions, TCommandContext>;
 		/**
 		 * Register all commands
 		 *

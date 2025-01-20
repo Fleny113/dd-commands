@@ -14,13 +14,14 @@ export type Command<
 	TBehavior extends DesiredPropertiesBehavior,
 	TBot extends Bot<TProps, TBehavior>,
 	TOptions extends CommandOption[] = CommandOption[],
+	TContext extends object = object,
 > = CreateApplicationCommand & {
 	/** @inheritdoc */
 	options?: TOptions;
 	/** Function to run when the interaction is executed */
 	run: (
 		interaction: TBot["transformers"]["$inferredTypes"]["interaction"],
-		options: GetCommandOptions<TProps, TBehavior, TBot, TOptions>,
+		context: TContext & { args: GetCommandOptions<TProps, TBehavior, TBot, TOptions> },
 	) => unknown;
 };
 
