@@ -1,0 +1,22 @@
+{
+	"name": "dd-commands",
+	"version": "0.0.0",
+	"description": "A command library for Discordeno",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"type": "module",
+	"author": "Fleny113",
+	"license": "MIT",
+	"packageManager": "pnpm@10.0.0",
+	"scripts": {
+		"build": "tsc",
+		"lint": "biome check"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"typescript": "^5.7.3"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": ["@biomejs/biome"]
+	}
+}

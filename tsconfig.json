@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "Node16",
+		"rootDir": "src",
+		"outDir": "dist",
+		"declaration": true,
+		"inlineSourceMap": true,
+
+		"incremental": true,
+		"tsBuildInfoFile": "./dist/.tsbuildinfo",
+
+		"strict": true,
+		"skipLibCheck": true,
+		"skipDefaultLibCheck": true
+	}
+}
