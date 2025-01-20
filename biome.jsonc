@@ -7,7 +7,8 @@
 	},
 	"formatter": {
 		"enabled": true,
-		"indentStyle": "tab"
+		"indentStyle": "tab",
+		"lineWidth": 120
 	},
 	"organizeImports": {
 		"enabled": true
@@ -22,5 +23,15 @@
 		"formatter": {
 			"quoteStyle": "double"
 		}
+	},
+	"json": {
+		"parser": {
+			"allowComments": true,
+			"allowTrailingCommas": true
+		}
+	},
+	"files": {
+		// Ignore package.json file, pnpm already handles the formatting for it
+		"ignore": ["package.json"]
 	}
 }

@@ -12,11 +12,17 @@
 		"build": "tsc",
 		"lint": "biome check"
 	},
+	"peerDependencies": {
+		"@discordeno/bot": "^21.0.0"
+	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
+		"@discordeno/bot": "^21.0.0",
 		"typescript": "^5.7.3"
 	},
 	"pnpm": {
-		"onlyBuiltDependencies": ["@biomejs/biome"]
+		"onlyBuiltDependencies": [
+			"@biomejs/biome"
+		]
 	}
 }
