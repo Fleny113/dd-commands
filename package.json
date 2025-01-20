@@ -2,9 +2,11 @@
 	"name": "dd-commands",
 	"version": "0.0.0",
 	"description": "A command library for Discordeno",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
 	"type": "module",
+	"exports": {
+		"types": "./dist/index.d.ts",
+		"default": "./dist/index.js"
+	},
 	"author": "Fleny113",
 	"license": "MIT",
 	"packageManager": "pnpm@10.0.0",
@@ -16,6 +18,10 @@
 		"dist",
 		"!dist/.tsbuildinfo"
 	],
+	"homepage": "https://github.com/Fleny113/dd-commands",
+	"bugs": {
+		"url": "https://github.com/Fleny113/dd-commands/issues"
+	},
 	"peerDependencies": {
 		"@discordeno/bot": "^21.0.0"
 	},
