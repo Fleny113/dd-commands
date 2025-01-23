@@ -13,6 +13,7 @@ import type {
 	Member,
 	User,
 	Channel,
+	Interaction,
 } from "@discordeno/bot";
 
 export type CommandOption = Camelize<DiscordApplicationCommandOption>;
@@ -20,7 +21,6 @@ export type CommandOption = Camelize<DiscordApplicationCommandOption>;
 export type Command<
 	TProps extends TransformersDesiredProperties,
 	TBehavior extends DesiredPropertiesBehavior,
-	TBot extends Bot<TProps, TBehavior>,
 	TOptions extends CommandOption[] = CommandOption[],
 	TContext extends object = object,
 > = CreateApplicationCommand & {
@@ -28,7 +28,7 @@ export type Command<
 	options?: TOptions;
 	/** Function to run when the interaction is executed */
 	run: (
-		interaction: TBot["transformers"]["$inferredTypes"]["interaction"],
+		interaction: SetupDesiredProps<Interaction, TProps, TBehavior>,
 		context: TContext & { args: GetCommandOptions<TProps, TBehavior, TOptions> },
 	) => unknown;
 };

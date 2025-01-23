@@ -22,7 +22,7 @@ export function useCommands<
 	bot.commands = {
 		mapping: new Map(),
 		create(command) {
-			bot.commands.mapping.set(command.name, command as Command<TProps, TBehavior, TBot>);
+			bot.commands.mapping.set(command.name, command as Command<TProps, TBehavior>);
 			return command;
 		},
 		register(guildId) {
@@ -57,13 +57,13 @@ export type BotWithCommands<
 		/**
 		 * The mapping of command names to their respective command objects
 		 */
-		mapping: Map<string, Command<TProps, TBehavior, TBot, CommandOption[], TCommandContext>>;
+		mapping: Map<string, Command<TProps, TBehavior, CommandOption[], TCommandContext>>;
 		/**
 		 * Create a new command
 		 */
 		create: <const TOptions extends CommandOption[]>(
-			command: Command<TProps, TBehavior, TBot, TOptions, TCommandContext>,
-		) => Command<TProps, TBehavior, TBot, TOptions, TCommandContext>;
+			command: Command<TProps, TBehavior, TOptions, TCommandContext>,
+		) => Command<TProps, TBehavior, TOptions, TCommandContext>;
 		/**
 		 * Register all commands
 		 *
