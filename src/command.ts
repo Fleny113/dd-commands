@@ -5,9 +5,17 @@ import type {
 	CreateApplicationCommand,
 	DesiredPropertiesBehavior,
 	DiscordApplicationCommandOption,
+	SetupDesiredProps,
 	InteractionResolvedData,
 	TransformersDesiredProperties,
+	Role,
+	Attachment,
+	Member,
+	User,
+	Channel,
 } from "@discordeno/bot";
+
+export type CommandOption = Camelize<DiscordApplicationCommandOption>;
 
 export type Command<
 	TProps extends TransformersDesiredProperties,
@@ -21,109 +29,83 @@ export type Command<
 	/** Function to run when the interaction is executed */
 	run: (
 		interaction: TBot["transformers"]["$inferredTypes"]["interaction"],
-		context: TContext & { args: GetCommandOptions<TProps, TBehavior, TBot, TOptions> },
+		context: TContext & { args: GetCommandOptions<TProps, TBehavior, TOptions> },
 	) => unknown;
 };
-
-export type CommandOption = Camelize<DiscordApplicationCommandOption>;
 
 export type GetCommandOptions<
 	TProps extends TransformersDesiredProperties,
 	TBehavior extends DesiredPropertiesBehavior,
-	TBot extends Bot<TProps, TBehavior>,
 	T extends CommandOption[],
 > = T extends CommandOption[]
-	? { [Prop in keyof BuildOptions<TProps, TBehavior, TBot, T>]: BuildOptions<TProps, TBehavior, TBot, T>[Prop] }
+	? { [Prop in keyof BuildOptions<TProps, TBehavior, T>]: BuildOptions<TProps, TBehavior, T>[Prop] }
 	: never;
 
 // Option parsing
 
-type ResolvedValues<
-	TProps extends TransformersDesiredProperties,
-	TBehavior extends DesiredPropertiesBehavior,
-> = InteractionResolvedData<TProps, TBehavior>;
+type BuildOptions<TProps extends TransformersDesiredProperties, TBehavior extends DesiredPropertiesBehavior, T> = {
+	[Prop in Exclude<keyof T, keyof Array<unknown>> as GetOptionName<T[Prop]>]: GetOptionValue<
+		TProps,
+		TBehavior,
+		T[Prop]
+	>;
+};
 
-export type InteractionResolvedChannel<
+type GetOptionName<T> = T extends { name: string } ? T["name"] : never;
+
+type GetOptionValue<
 	TProps extends TransformersDesiredProperties,
 	TBehavior extends DesiredPropertiesBehavior,
-	TBot extends Bot<TProps, TBehavior>,
-> = Omit<
-	TBot["transformers"]["$inferredTypes"]["channel"],
-	Exclude<
-		keyof TBot["transformers"]["$inferredTypes"]["channel"],
+	T,
+> = T extends CommandOption
+	? T extends { type: SubCommandApplicationCommand; options?: CommandOption[] }
+		? BuildOptions<TProps, TBehavior, T["options"]> | undefined
+		: TypeToResolvedMap<TProps, TBehavior>[T["type"]] | (T["required"] extends true ? never : undefined)
+	: never;
+
+// TODO: Replace with "InteractionResolvedDataUser" from @discordeno/bot when #4099 merges
+export interface InteractionResolvedDataUser<
+	TProps extends TransformersDesiredProperties,
+	TBehavior extends DesiredPropertiesBehavior,
+> {
+	user: SetupDesiredProps<User, TProps, TBehavior>;
+	member: InteractionResolvedDataMember<TProps, TBehavior>;
+}
+
+// TODO: Replace with "InteractionResolvedDataChannel" from @discordeno/bot when #4099 merges
+export type InteractionResolvedDataChannel<
+	TProps extends TransformersDesiredProperties,
+	TBehavior extends DesiredPropertiesBehavior,
+> = Pick<
+	SetupDesiredProps<Channel, TProps, TBehavior>,
+	Extract<
+		keyof SetupDesiredProps<Channel, TProps, TBehavior>,
 		"id" | "name" | "type" | "permissions" | "threadMetadata" | "parentId"
 	>
 >;
-export type InteractionResolvedMember<
-	TProps extends TransformersDesiredProperties,
-	TBehavior extends DesiredPropertiesBehavior,
-	TBot extends Bot<TProps, TBehavior>,
-> = Omit<TBot["transformers"]["$inferredTypes"]["member"], "user" | "deaf" | "mute">;
 
-export interface InteractionResolvedUser<
+// TODO: Replace with "InteractionResolvedDataMember" from @discordeno/bot when #4099 merges
+export type InteractionResolvedDataMember<
 	TProps extends TransformersDesiredProperties,
 	TBehavior extends DesiredPropertiesBehavior,
-	TBot extends Bot<TProps, TBehavior>,
-> {
-	user: TBot["transformers"]["$inferredTypes"]["user"];
-	member: InteractionResolvedMember<TProps, TBehavior, TBot>;
-}
+> = Omit<SetupDesiredProps<Member, TProps, TBehavior>, "user" | "deaf" | "mute">;
 
-/**
- * From here SubCommandGroup and SubCommand are missing, this is wanted.
- *
- * The entries are sorted based on the enum value
- */
-type TypeToResolvedMap<
-	TProps extends TransformersDesiredProperties,
-	TBehavior extends DesiredPropertiesBehavior,
-	TBot extends Bot<TProps, TBehavior>,
-> = {
+type TypeToResolvedMap<TProps extends TransformersDesiredProperties, TBehavior extends DesiredPropertiesBehavior> = {
 	[ApplicationCommandOptionTypes.String]: string;
 	[ApplicationCommandOptionTypes.Integer]: number;
 	[ApplicationCommandOptionTypes.Boolean]: boolean;
-	[ApplicationCommandOptionTypes.User]: InteractionResolvedUser<TProps, TBehavior, TBot>;
-	[ApplicationCommandOptionTypes.Channel]: InteractionResolvedChannel<TProps, TBehavior, TBot>;
-	[ApplicationCommandOptionTypes.Role]: TBot["transformers"]["$inferredTypes"]["role"];
+	[ApplicationCommandOptionTypes.User]: InteractionResolvedDataUser<TProps, TBehavior>;
+	[ApplicationCommandOptionTypes.Channel]: InteractionResolvedDataChannel<TProps, TBehavior>;
+	[ApplicationCommandOptionTypes.Role]: SetupDesiredProps<Role, TProps, TBehavior>;
 	[ApplicationCommandOptionTypes.Mentionable]:
-		| TBot["transformers"]["$inferredTypes"]["role"]
-		| InteractionResolvedUser<TProps, TBehavior, TBot>;
+		| SetupDesiredProps<Role, TProps, TBehavior>
+		| InteractionResolvedDataUser<TProps, TBehavior>;
 	[ApplicationCommandOptionTypes.Number]: number;
-	[ApplicationCommandOptionTypes.Attachment]: TBot["transformers"]["$inferredTypes"]["attachment"];
+	[ApplicationCommandOptionTypes.Attachment]: SetupDesiredProps<Attachment, TProps, TBehavior>;
+	[ApplicationCommandOptionTypes.SubCommand]: InteractionResolvedData<TProps, TBehavior>;
+	[ApplicationCommandOptionTypes.SubCommandGroup]: InteractionResolvedData<TProps, TBehavior>;
 };
-
-type ConvertTypeToResolved<
-	TProps extends TransformersDesiredProperties,
-	TBehavior extends DesiredPropertiesBehavior,
-	TBot extends Bot<TProps, TBehavior>,
-	T extends ApplicationCommandOptionTypes,
-> = T extends keyof TypeToResolvedMap<TProps, TBehavior, TBot>
-	? TypeToResolvedMap<TProps, TBehavior, TBot>[T]
-	: ResolvedValues<TProps, TBehavior>;
 
 type SubCommandApplicationCommand =
 	| ApplicationCommandOptionTypes.SubCommand
 	| ApplicationCommandOptionTypes.SubCommandGroup;
-type GetOptionName<T> = T extends { name: string } ? T["name"] : never;
-type GetOptionValue<
-	TProps extends TransformersDesiredProperties,
-	TBehavior extends DesiredPropertiesBehavior,
-	TBot extends Bot<TProps, TBehavior>,
-	T,
-> = T extends {
-	type: ApplicationCommandOptionTypes;
-	required?: boolean;
-}
-	? T extends { type: SubCommandApplicationCommand; options?: CommandOption[] }
-		? BuildOptions<TProps, TBehavior, TBot, T["options"]> | undefined
-		: ConvertTypeToResolved<TProps, TBehavior, TBot, T["type"]> | (T["required"] extends true ? never : undefined)
-	: never;
-
-type BuildOptions<
-	TProps extends TransformersDesiredProperties,
-	TBehavior extends DesiredPropertiesBehavior,
-	TBot extends Bot<TProps, TBehavior>,
-	T extends CommandOption[] | undefined,
-> = {
-	[Prop in keyof Omit<T, keyof unknown[]> as GetOptionName<T[Prop]>]: GetOptionValue<TProps, TBehavior, TBot, T[Prop]>;
-};
