@@ -1,6 +1,5 @@
 import type {
 	ApplicationCommandOptionTypes,
-	Bot,
 	Camelize,
 	CreateApplicationCommand,
 	DesiredPropertiesBehavior,
@@ -33,6 +32,8 @@ export type Command<
 	) => unknown;
 };
 
+//#region Option parsing
+
 export type GetCommandOptions<
 	TProps extends TransformersDesiredProperties,
 	TBehavior extends DesiredPropertiesBehavior,
@@ -40,8 +41,6 @@ export type GetCommandOptions<
 > = T extends CommandOption[]
 	? { [Prop in keyof BuildOptions<TProps, TBehavior, T>]: BuildOptions<TProps, TBehavior, T>[Prop] }
 	: never;
-
-// Option parsing
 
 type BuildOptions<TProps extends TransformersDesiredProperties, TBehavior extends DesiredPropertiesBehavior, T> = {
 	[Prop in Exclude<keyof T, keyof Array<unknown>> as GetOptionName<T[Prop]>]: GetOptionValue<
@@ -109,3 +108,44 @@ type TypeToResolvedMap<TProps extends TransformersDesiredProperties, TBehavior e
 type SubCommandApplicationCommand =
 	| ApplicationCommandOptionTypes.SubCommand
 	| ApplicationCommandOptionTypes.SubCommandGroup;
+
+//#endregion
+
+//#region SubCommand delegate
+
+export type SubCommandDelegate<
+	TProps extends TransformersDesiredProperties,
+	TBehavior extends DesiredPropertiesBehavior,
+	TOptions extends CommandOption[],
+	TContext extends object,
+	TSubCommand extends keyof GetSubCommands<TOptions>,
+	TSubCommandNested extends keyof GetSubCommands<TOptions>[TSubCommand] | null,
+	TReturnValue = unknown,
+	TExtraParams extends unknown[] = [],
+> = (
+	interaction: SetupDesiredProps<Interaction, TProps, TBehavior>,
+	context: TContext & {
+		args: GetSubCommandOptions<GetCommandOptions<TProps, TBehavior, TOptions>, TSubCommand, TSubCommandNested>;
+	},
+	...rest: TExtraParams
+) => TReturnValue;
+
+type GetSubCommandOptionName<T> = T extends { name: string; type: SubCommandApplicationCommand } ? T["name"] : never;
+
+export type GetSubCommands<TOptions extends CommandOption[]> = {
+	[Prop in Exclude<keyof TOptions, keyof Array<unknown>> as GetSubCommandOptionName<
+		TOptions[Prop]
+	>]: TOptions[Prop] extends { type: SubCommandApplicationCommand; options: CommandOption[] }
+		? GetSubCommands<TOptions[Prop]["options"]>
+		: never;
+};
+
+export type GetSubCommandOptions<TOptions, TSubCommand, TSubCommandNested> = TSubCommand extends keyof TOptions
+	? TSubCommandNested extends null
+		? NonNullable<TOptions[TSubCommand]>
+		: TSubCommandNested extends keyof NonNullable<TOptions[TSubCommand]>
+			? NonNullable<NonNullable<TOptions[TSubCommand]>[TSubCommandNested]>
+			: never
+	: never;
+
+//#endregion
